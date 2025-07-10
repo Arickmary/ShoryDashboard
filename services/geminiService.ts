@@ -6,8 +6,8 @@ let geminiInitError: string | null = null;
 
 const apiKey = window.APP_CONFIG?.API_KEY;
 
-if (!apiKey) {
-    geminiInitError = "Gemini API Key (API_KEY) is not set in config.js.";
+if (!apiKey || apiKey.startsWith("YOUR_")) {
+    geminiInitError = "Gemini API Key (API_KEY) is not set. Please add it to the script in your index.html file.";
     console.error(geminiInitError);
 } else {
     try {

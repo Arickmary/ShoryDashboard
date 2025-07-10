@@ -6,8 +6,8 @@ const supabaseKey = window.APP_CONFIG?.SUPABASE_KEY;
 let supabaseClient: ReturnType<typeof createClient> | null = null;
 let supabaseInitError: string | null = null;
 
-if (!supabaseUrl || !supabaseKey) {
-    supabaseInitError = "Supabase URL or Key is not set in config.js. Please create the file and add your credentials.";
+if (!supabaseUrl || !supabaseKey || supabaseUrl.startsWith("YOUR_")) {
+    supabaseInitError = "Supabase URL or Key is not set. Please add your credentials to the script in your index.html file.";
 } else {
     supabaseClient = createClient(supabaseUrl, supabaseKey);
 }

@@ -27,7 +27,7 @@ const ErrorScreen: React.FC<{ message: string }> = ({ message }) => (
             <Icon name="alert-triangle" className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-slate-800">Something went wrong</h1>
             <p className="text-slate-500 mt-2 max-w-md">{message}</p>
-            <p className="text-xs text-slate-400 mt-4">Please check your .env file and Supabase table configuration.</p>
+            <p className="text-xs text-slate-400 mt-4">Please check the configuration script in your index.html file.</p>
         </div>
     </div>
 );
