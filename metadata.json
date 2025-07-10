@@ -1,0 +1,5 @@
+{
+  "name": "Insurance Product Dashboard",
+  "description": "A dashboard to manage and track the status of insurance products, featuring AI-powered summaries for portfolio reviews.",
+  "requestFramePermissions": []
+}
