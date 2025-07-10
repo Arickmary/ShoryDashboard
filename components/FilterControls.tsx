@@ -1,16 +1,17 @@
+
 import React from 'react';
-import { InsuranceProductStatus } from '../types';
+import { PartnerStatus } from '../types';
 import { Icon } from './Icon';
 
 interface FilterControlsProps {
-    statusFilter: InsuranceProductStatus | 'all';
-    onStatusFilterChange: (status: InsuranceProductStatus | 'all') => void;
+    statusFilter: PartnerStatus | 'all';
+    onStatusFilterChange: (status: PartnerStatus | 'all') => void;
     searchTerm: string;
     onSearchTermChange: (term: string) => void;
 }
 
 export function FilterControls({ statusFilter, onStatusFilterChange, searchTerm, onSearchTermChange }: FilterControlsProps): React.ReactNode {
-    const statuses = ['all', ...Object.values(InsuranceProductStatus)];
+    const statuses = ['all', ...Object.values(PartnerStatus)];
     
     return (
         <div className="flex items-center space-x-4">
@@ -20,7 +21,7 @@ export function FilterControls({ statusFilter, onStatusFilterChange, searchTerm,
                 </div>
                 <input
                     type="text"
-                    placeholder="Search policies..."
+                    placeholder="Search partners..."
                     value={searchTerm}
                     onChange={(e) => onSearchTermChange(e.target.value)}
                     className="pl-10 pr-4 py-2 w-64 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition"
@@ -29,7 +30,7 @@ export function FilterControls({ statusFilter, onStatusFilterChange, searchTerm,
             
             <select
                 value={statusFilter}
-                onChange={(e) => onStatusFilterChange(e.target.value as InsuranceProductStatus | 'all')}
+                onChange={(e) => onStatusFilterChange(e.target.value as PartnerStatus | 'all')}
                 className="py-2 pr-8 pl-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition bg-white"
             >
                 {statuses.map(status => (

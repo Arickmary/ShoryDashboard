@@ -1,18 +1,20 @@
+
 import React, { useState, useCallback } from 'react';
-import type { InsuranceProduct } from '../types';
+import type { Partner } from '../types';
 import { StatusBadge } from './StatusBadge';
 import { Icon } from './Icon';
-import { generateInsuranceProductSummary } from '../services/geminiService';
+import { generatePartnerSummary } from '../services/geminiService';
 
-interface ProductDetailModalProps {
-    product: InsuranceProduct;
+interface PartnerDetailModalProps {
+    partner: Partner;
     onClose: () => void;
+    onEdit: (partner: Partner) => void;
 }
 
-const DetailItem: React.FC<{ icon: string; label: string; children: React.ReactNode }> = ({ icon, label, children }) => (
+const DetailItem: React.FC<{ icon: React.ComponentProps<typeof Icon>['name']; label: string; children: React.ReactNode }> = ({ icon, label, children }) => (
     <div>
         <dt className="flex items-center text-sm font-medium text-slate-500">
-            <Icon name={icon as any} className="w-4 h-4 mr-2" />
+            <Icon name={icon} className="w-4 h-4 mr-2" />
             <span>{label}</span>
         </dt>
         <dd className="mt-1 text-sm text-slate-900">{children}</dd>
@@ -27,7 +29,7 @@ const AILoadingSkeleton: React.FC = () => (
     </div>
 );
 
-export function ProductDetailModal({ product, onClose }: ProductDetailModalProps): React.ReactNode {
+export function ProductDetailModal({ partner, onClose, onEdit }: PartnerDetailModalProps): React.ReactNode {
     const [aiSummary, setAiSummary] = useState<string>('');
     const [isLoadingSummary, setIsLoadingSummary] = useState<boolean>(false);
 
@@ -35,7 +37,7 @@ export function ProductDetailModal({ product, onClose }: ProductDetailModalProps
         setIsLoadingSummary(true);
         setAiSummary('');
         try {
-            const summary = await generateInsuranceProductSummary(product);
+            const summary = await generatePartnerSummary(partner);
             setAiSummary(summary);
         } catch (error) {
             console.error(error);
@@ -43,7 +45,7 @@ export function ProductDetailModal({ product, onClose }: ProductDetailModalProps
         } finally {
             setIsLoadingSummary(false);
         }
-    }, [product]);
+    }, [partner]);
     
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center" onClick={onClose}>
@@ -51,21 +53,22 @@ export function ProductDetailModal({ product, onClose }: ProductDetailModalProps
                 className="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 ease-out"
                 onClick={(e) => e.stopPropagation()}
             >
-                <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 transition-colors">
-                    <Icon name="x" className="w-6 h-6 text-slate-500" />
-                </button>
-                
-                <div className="p-8">
-                    {/* Header */}
-                    <div className="flex items-center space-x-4 mb-6">
-                        <img src={product.iconUrl} alt={`${product.name} icon`} className="w-16 h-16 rounded-lg object-cover border-2 border-white shadow-md" />
-                        <div>
-                            <h2 className="text-3xl font-bold text-slate-800">{product.name}</h2>
-                            <div className="mt-1"><StatusBadge status={product.status} /></div>
+                <div className="p-8 pb-0">
+                    <div className="flex justify-between items-start">
+                        <div className="flex items-center space-x-4 mb-6">
+                            <img src={partner.logo_url} alt={`${partner.name} logo`} className="w-16 h-16 rounded-lg object-cover border-2 border-white shadow-md" />
+                            <div>
+                                <h2 className="text-3xl font-bold text-slate-800">{partner.name}</h2>
+                                <div className="mt-1"><StatusBadge status={partner.status} /></div>
+                            </div>
                         </div>
+                        <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 transition-colors">
+                            <Icon name="x" className="w-6 h-6 text-slate-500" />
+                        </button>
                     </div>
-
-                    {/* AI Summary Section */}
+                </div>
+                
+                <div className="p-8 pt-0 max-h-[80vh] overflow-y-auto">
                     <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6">
                         <div className="flex justify-between items-center mb-2">
                              <h3 className="text-lg font-semibold text-slate-700 flex items-center">
@@ -82,39 +85,34 @@ export function ProductDetailModal({ product, onClose }: ProductDetailModalProps
                             </button>
                         </div>
                         <div className="text-sm text-slate-600 leading-relaxed">
-                            {isLoadingSummary ? <AILoadingSkeleton /> : (aiSummary || <p className="italic text-slate-500">Click "Regenerate" to create a policy summary.</p>)}
+                            {isLoadingSummary ? <AILoadingSkeleton /> : (aiSummary || <p className="italic text-slate-500">Click "Regenerate" to create a partner summary.</p>)}
                         </div>
                     </div>
 
-                    {/* Details Grid */}
                     <div className="border-t border-slate-200 pt-6">
                          <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
-                            <DetailItem icon="user" label="Underwriter">
-                                {product.underwriter.name} (<a href={`mailto:${product.underwriter.email}`} className="text-sky-600 hover:underline">{product.underwriter.email}</a>)
+                            <DetailItem icon="user" label="Contact Person">
+                                {partner.contact_person.name} (<a href={`mailto:${partner.contact_person.email}`} className="text-sky-600 hover:underline">{partner.contact_person.email}</a>)
                             </DetailItem>
-                             <DetailItem icon="calendar" label="Last Update">
-                                {new Date(product.lastUpdate).toLocaleString()}
-                            </DetailItem>
-                             <DetailItem icon="tag" label="Category">
-                                {product.category}
-                            </DetailItem>
-                            <DetailItem icon="git-branch" label="Policy Code">
-                                {product.policyCode}
+                             <DetailItem icon="calendar" label="Joined Date">
+                                {new Date(partner.join_date).toLocaleDateString()}
                             </DetailItem>
                             <div className="md:col-span-2">
                                 <DetailItem icon="file-text" label="Description">
-                                   <p className="whitespace-pre-wrap font-mono text-xs bg-slate-50 p-3 rounded-md border border-slate-200">{product.description}</p>
-                                </DetailItem>
-                            </div>
-                            <div className="md:col-span-2">
-                                <DetailItem icon="check-circle" label="Key Features">
-                                   <ul className="list-disc list-inside space-y-1 mt-1">
-                                    {product.keyFeatures.map(feature => <li key={feature}>{feature}</li>)}
-                                   </ul>
+                                   <p className="whitespace-pre-wrap font-mono text-xs bg-slate-50 p-3 rounded-md border border-slate-200">{partner.description}</p>
                                 </DetailItem>
                             </div>
                         </dl>
                     </div>
+                </div>
+                 <div className="p-6 bg-slate-50 border-t border-slate-200 rounded-b-xl flex justify-end">
+                    <button
+                        onClick={() => onEdit(partner)}
+                        className="px-5 py-2.5 bg-slate-700 text-white font-semibold rounded-lg hover:bg-slate-800 disabled:opacity-50 flex items-center transition-colors"
+                    >
+                        <Icon name="pencil" className="w-4 h-4 mr-2" />
+                        Edit Partner
+                    </button>
                 </div>
             </div>
         </div>

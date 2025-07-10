@@ -1,13 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
 import { Icon } from './Icon';
-import type { NewInsuranceProduct, InsuranceCategory, InsuranceProduct } from '../types';
-import { InsuranceProductStatus } from '../types';
+import type { NewPartner, Partner } from '../types';
+import { PartnerStatus } from '../types';
 
-interface ProductFormModalProps {
+interface PartnerFormModalProps {
     onClose: () => void;
-    onAddProduct: (product: NewInsuranceProduct) => Promise<void>;
-    onUpdateProduct: (product: NewInsuranceProduct, id: string) => Promise<void>;
-    productToEdit: InsuranceProduct | null;
+    onAddPartner: (partner: NewPartner) => Promise<void>;
+    onUpdatePartner: (partner: NewPartner, id: string) => Promise<void>;
+    partnerToEdit: Partner | null;
 }
 
 const InputField: React.FC<{ id: string; label: string; children: React.ReactNode }> = ({ id, label, children }) => (
@@ -17,37 +18,35 @@ const InputField: React.FC<{ id: string; label: string; children: React.ReactNod
     </div>
 );
 
-export const ProductFormModal: React.FC<ProductFormModalProps> = ({ onClose, onAddProduct, onUpdateProduct, productToEdit }) => {
-    const isEditMode = !!productToEdit;
+export const ProductFormModal: React.FC<PartnerFormModalProps> = ({ onClose, onAddPartner, onUpdatePartner, partnerToEdit }) => {
+    const isEditMode = !!partnerToEdit;
 
-    const [formData, setFormData] = useState<NewInsuranceProduct>({
+    const [formData, setFormData] = useState({
         name: '',
-        iconUrl: 'https://i.imgur.com/g892g4S.png', // Default icon
-        status: InsuranceProductStatus.InReview,
-        category: 'Motor',
-        policyCode: '',
+        logo_url: 'https://i.imgur.com/sC22L2A.png', // Default logo
+        status: PartnerStatus.Onboarding,
+        join_date: new Date().toISOString().split('T')[0],
+        contact_person_name: '',
+        contact_person_email: '',
         description: '',
-        keyFeatures: [],
     });
-    const [keyFeaturesInput, setKeyFeaturesInput] = useState('');
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (isEditMode) {
+        if (isEditMode && partnerToEdit) {
             setFormData({
-                name: productToEdit.name,
-                iconUrl: productToEdit.iconUrl,
-                status: productToEdit.status,
-                category: productToEdit.category,
-                policyCode: productToEdit.policyCode,
-                description: productToEdit.description,
-                keyFeatures: productToEdit.keyFeatures,
+                name: partnerToEdit.name,
+                logo_url: partnerToEdit.logo_url,
+                status: partnerToEdit.status,
+                join_date: new Date(partnerToEdit.join_date).toISOString().split('T')[0],
+                contact_person_name: partnerToEdit.contact_person.name,
+                contact_person_email: partnerToEdit.contact_person.email,
+                description: partnerToEdit.description,
             });
-            setKeyFeaturesInput(productToEdit.keyFeatures.join(', '));
         }
-    }, [productToEdit, isEditMode]);
-
+    }, [partnerToEdit, isEditMode]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -59,16 +58,23 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({ onClose, onA
         setLoading(true);
         setError(null);
         
-        const productData: NewInsuranceProduct = {
-            ...formData,
-            keyFeatures: keyFeaturesInput.split(',').map(f => f.trim()).filter(Boolean),
+        const partnerData: NewPartner = {
+            name: formData.name,
+            logo_url: formData.logo_url,
+            status: formData.status,
+            join_date: new Date(formData.join_date).toISOString(),
+            contact_person: {
+                name: formData.contact_person_name,
+                email: formData.contact_person_email,
+            },
+            description: formData.description,
         };
 
         try {
-            if (isEditMode) {
-                await onUpdateProduct(productData, productToEdit.id);
+            if (isEditMode && partnerToEdit) {
+                await onUpdatePartner(partnerData, partnerToEdit.id);
             } else {
-                await onAddProduct(productData);
+                await onAddPartner(partnerData);
             }
         } catch (err) {
             const apiError = err as Error;
@@ -86,7 +92,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({ onClose, onA
             >
                 <div className="flex justify-between items-center p-6 border-b border-slate-200">
                     <h2 className="text-2xl font-bold text-slate-800">
-                        {isEditMode ? 'Edit Insurance Policy' : 'Add New Insurance Policy'}
+                        {isEditMode ? 'Edit Partner' : 'Add New Partner'}
                     </h2>
                     <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 transition-colors">
                         <Icon name="x" className="w-6 h-6 text-slate-500" />
@@ -97,34 +103,27 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({ onClose, onA
                     <div className="p-6 max-h-[70vh] overflow-y-auto">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="md:col-span-2">
-                                <InputField id="name" label="Policy Name">
+                                <InputField id="name" label="Partner Name">
                                     <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
                                 </InputField>
                             </div>
                             <InputField id="status" label="Status">
                                 <select id="status" name="status" value={formData.status} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white">
-                                    {Object.values(InsuranceProductStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                                    {Object.values(PartnerStatus).map(s => <option key={s} value={s}>{s}</option>)}
                                 </select>
                             </InputField>
-                            <InputField id="category" label="Category">
-                                 <select id="category" name="category" value={formData.category} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white">
-                                    {(['Motor', 'Medical', 'Marine', 'Pet'] as InsuranceCategory[]).map(c => <option key={c} value={c}>{c}</option>)}
-                                 </select>
+                             <InputField id="logo_url" label="Logo URL">
+                                <input type="text" id="logo_url" name="logo_url" value={formData.logo_url} onChange={handleChange} required className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
                             </InputField>
-                            <InputField id="policyCode" label="Policy Code">
-                                <input type="text" id="policyCode" name="policyCode" value={formData.policyCode} onChange={handleChange} required className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+                            <InputField id="contact_person_name" label="Contact Name">
+                                <input type="text" id="contact_person_name" name="contact_person_name" value={formData.contact_person_name} onChange={handleChange} required className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
                             </InputField>
-                             <InputField id="iconUrl" label="Icon URL">
-                                <input type="text" id="iconUrl" name="iconUrl" value={formData.iconUrl} onChange={handleChange} required className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+                            <InputField id="contact_person_email" label="Contact Email">
+                                <input type="email" id="contact_person_email" name="contact_person_email" value={formData.contact_person_email} onChange={handleChange} required className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
                             </InputField>
                             <div className="md:col-span-2">
                                 <InputField id="description" label="Description">
                                     <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows={4} className="w-full px-3 py-2 border border-slate-300 rounded-lg"></textarea>
-                                </InputField>
-                            </div>
-                            <div className="md:col-span-2">
-                                <InputField id="keyFeaturesInput" label="Key Features (comma-separated)">
-                                    <input type="text" id="keyFeaturesInput" name="keyFeaturesInput" value={keyFeaturesInput} onChange={(e) => setKeyFeaturesInput(e.target.value)} placeholder="e.g. 24/7 Support, Theft Protection" className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
                                 </InputField>
                             </div>
                         </div>
@@ -134,7 +133,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({ onClose, onA
                         <button type="button" onClick={onClose} className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100">Cancel</button>
                         <button type="submit" disabled={loading} className="px-6 py-2 bg-sky-600 text-white font-semibold rounded-lg hover:bg-sky-700 disabled:opacity-50 flex items-center">
                            <Icon name={loading ? 'loader' : (isEditMode ? 'check-circle' : 'plus')} className={`w-5 h-5 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                           {loading ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Add Policy')}
+                           {loading ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Add Partner')}
                         </button>
                     </div>
                 </form>

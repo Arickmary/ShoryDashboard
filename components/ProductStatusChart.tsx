@@ -1,27 +1,26 @@
+
 import React, { useMemo } from 'react';
-import type { InsuranceProduct } from '../types';
-import { InsuranceProductStatus } from '../types';
+import type { Partner } from '../types';
+import { PartnerStatus } from '../types';
 import { STATUS_DOT_COLORS } from '../constants';
 
 interface ProductStatusChartProps {
-    products: InsuranceProduct[];
+    partners: Partner[];
 }
 
-const statusOrder: InsuranceProductStatus[] = [
-    InsuranceProductStatus.Active,
-    InsuranceProductStatus.Pilot,
-    InsuranceProductStatus.InReview,
-    InsuranceProductStatus.Discontinued,
+const statusOrder: PartnerStatus[] = [
+    PartnerStatus.Active,
+    PartnerStatus.Onboarding,
+    PartnerStatus.Inactive,
 ];
 
-export const ProductStatusChart: React.FC<ProductStatusChartProps> = ({ products }) => {
+export const ProductStatusChart: React.FC<ProductStatusChartProps> = ({ partners }) => {
     const statusCounts = useMemo(() => {
-        const counts = products.reduce((acc, product) => {
-            acc[product.status] = (acc[product.status] || 0) + 1;
+        const counts = partners.reduce((acc, partner) => {
+            acc[partner.status] = (acc[partner.status] || 0) + 1;
             return acc;
-        }, {} as Record<InsuranceProductStatus, number>);
+        }, {} as Record<PartnerStatus, number>);
         
-        // Ensure all statuses have a count, even if 0
         statusOrder.forEach(status => {
             if (!counts[status]) {
                 counts[status] = 0;
@@ -29,7 +28,7 @@ export const ProductStatusChart: React.FC<ProductStatusChartProps> = ({ products
         });
         
         return counts;
-    }, [products]);
+    }, [partners]);
 
     const maxCount = useMemo(() => Math.max(1, ...Object.values(statusCounts)), [statusCounts]);
     

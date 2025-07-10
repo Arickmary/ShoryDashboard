@@ -1,5 +1,6 @@
+
 import { GoogleGenAI } from "@google/genai";
-import type { InsuranceProduct } from '../types';
+import type { Partner } from '../types';
 
 let ai: GoogleGenAI | null = null;
 let geminiInitError: string | null = null;
@@ -20,25 +21,22 @@ if (!apiKey || apiKey.startsWith("YOUR_")) {
 }
 
 
-export const generateInsuranceProductSummary = async (product: InsuranceProduct): Promise<string> => {
+export const generatePartnerSummary = async (partner: Partner): Promise<string> => {
     if (geminiInitError || !ai) {
         return geminiInitError || "An error occurred while initializing the AI summary service.";
     }
     
     const prompt = `
-        Based on the following insurance product data, generate a concise and professional status summary of 2-3 sentences suitable for an internal portfolio review meeting.
-        Start the summary with the product's name.
-        Highlight its current status, target market (based on category), and any key features or recent developments. Do not use markdown.
+        Based on the following partner data, generate a concise and professional status summary of 2-3 sentences suitable for an internal review meeting.
+        Start the summary with the partner's name.
+        Highlight their current status and how long they've been a partner. Do not use markdown.
 
-        Insurance Product Data:
-        - Name: ${product.name}
-        - Status: ${product.status}
-        - Category / Line of Business: ${product.category}
-        - Policy Code: ${product.policyCode}
-        - Underwriter: ${product.underwriter.name}
-        - Last Update: ${new Date(product.lastUpdate).toLocaleDateString()}
-        - Description & Notes: ${product.description}
-        - Key Features: ${product.keyFeatures.join(', ')}
+        Partner Data:
+        - Name: ${partner.name}
+        - Status: ${partner.status}
+        - Joined On: ${new Date(partner.join_date).toLocaleDateString()}
+        - Contact Person: ${partner.contact_person.name}
+        - Description & Notes: ${partner.description}
 
         Generate the summary now.
     `;

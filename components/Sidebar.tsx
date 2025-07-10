@@ -1,44 +1,49 @@
+
 import React from 'react';
 import { Icon } from './Icon';
-import type { ViewType } from '../App';
 import type { Session } from '@supabase/supabase-js';
 
-const NavItem = ({ icon, label, active = false, onClick }: { icon: React.ComponentProps<typeof Icon>['name'], label: string, active?: boolean, onClick: () => void }) => {
+const NavItem = ({ icon, label, active = false, path }: { icon: React.ComponentProps<typeof Icon>['name'], label: string, active?: boolean, path: string }) => {
     const activeClasses = active ? 'bg-slate-700 text-white' : 'hover:bg-slate-800 text-slate-400';
+    
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        window.history.pushState({}, '', path);
+    };
+
     return (
         <li>
-            <button onClick={onClick} className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${activeClasses}`}>
+            <a href={path} onClick={handleClick} className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors duration-200 ${activeClasses}`}>
                 <Icon name={icon} className="w-6 h-6 mr-3" />
                 <span className="font-medium">{label}</span>
-            </button>
+            </a>
         </li>
     );
 };
 
 interface SidebarProps {
-    activeView: ViewType;
-    onNavigate: (view: ViewType) => void;
+    activePath: string;
     session: Session;
     onSignOut: () => void;
 }
 
 
-export function Sidebar({ activeView, onNavigate, session, onSignOut }: SidebarProps): React.ReactNode {
+export function Sidebar({ activePath, session, onSignOut }: SidebarProps): React.ReactNode {
     return (
         <aside className="w-64 bg-slate-900 text-slate-300 flex-shrink-0 flex flex-col p-4">
             <div className="flex items-center space-x-3 p-2 mb-4">
                 <div className="bg-sky-500 p-2 rounded-lg">
                    <Icon name="zap" className="w-6 h-6 text-white" />
                 </div>
-                <h1 className="text-xl font-bold text-white">Insurance Hub</h1>
+                <h1 className="text-xl font-bold text-white">Product Hub</h1>
             </div>
 
             <nav className="flex-1">
                 <ul className="space-y-2">
-                    <NavItem icon="layout-dashboard" label="Dashboard" active={activeView === 'dashboard'} onClick={() => onNavigate('dashboard')} />
-                    <NavItem icon="shield" label="Policies" active={activeView === 'products'} onClick={() => onNavigate('products')} />
-                    <NavItem icon="file-text" label="Reports" active={activeView === 'reports'} onClick={() => onNavigate('reports')} />
-                    <NavItem icon="settings" label="Settings" active={activeView === 'settings'} onClick={() => onNavigate('settings')} />
+                    <NavItem icon="layout-dashboard" label="Dashboard" path="/dashboard" active={activePath === '/dashboard' || activePath === '/'} />
+                    <NavItem icon="package" label="Products" path="/products" active={activePath.startsWith('/products')} />
+                    <NavItem icon="file-text" label="Reports" path="/reports" active={activePath === '/reports'} />
+                    <NavItem icon="settings" label="Settings" path="/settings" active={activePath === '/settings'} />
                 </ul>
             </nav>
 

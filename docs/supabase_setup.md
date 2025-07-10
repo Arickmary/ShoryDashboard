@@ -1,72 +1,109 @@
+
 # Supabase Setup SQL Script
 
-This script will set up your Supabase database correctly for the Insurance Product Dashboard application.
+This script will set up your Supabase database correctly for the Product and Partner Dashboard.
 
 **Instructions:**
 
 1.  Navigate to the **SQL Editor** in your Supabase project dashboard.
-2.  Click **"+ New query"**.
-3.  Copy the entire content of this file and paste it into the Supabase SQL Editor.
-4.  Click the **"RUN"** button.
+2.  **Delete any old `products` tables** to avoid conflicts.
+3.  Click **"+ New query"**.
+4.  Copy the entire content of this file and paste it into the Supabase SQL Editor.
+5.  Click the **"RUN"** button.
 
 This will:
-- Create the `products` table if it doesn't already exist.
-- **Enable Row Level Security (RLS)**, which is crucial for protecting your data.
-- Create a security policy to **allow logged-in users to read** the product data.
+- Create the `products` and `partners` tables.
+- Establish a relationship between them.
+- **Enable Row Level Security (RLS)** on both tables.
+- Create security policies to allow logged-in users to manage data.
 - Insert sample data for the application to use.
 
 ---
 
 ```sql
--- Create the table for insurance products if it doesn't exist
+-- Create the table for top-level products
 CREATE TABLE IF NOT EXISTS public.products (
     id uuid NOT NULL DEFAULT uuid_generate_v4(),
     created_at timestamptz NOT NULL DEFAULT now(),
     name text NOT NULL,
-    icon_url text,
-    status text NOT NULL,
-    underwriter jsonb NOT NULL,
-    last_update timestamptz NOT NULL,
-    category text NOT NULL,
-    policy_code text NOT NULL,
     description text,
-    key_features jsonb,
+    icon_url text,
     CONSTRAINT products_pkey PRIMARY KEY (id)
 );
+
+-- Create the table for partners, with a link to a product
+CREATE TABLE IF NOT EXISTS public.partners (
+    id uuid NOT NULL DEFAULT uuid_generate_v4(),
+    created_at timestamptz NOT NULL DEFAULT now(),
+    product_id uuid NOT NULL,
+    name text NOT NULL,
+    status text NOT NULL,
+    join_date timestamptz NOT NULL,
+    contact_person jsonb NOT NULL,
+    description text,
+    logo_url text,
+    CONSTRAINT partners_pkey PRIMARY KEY (id),
+    CONSTRAINT partners_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE
+);
+
 
 -- =============================================
 -- ROW LEVEL SECURITY (RLS)
 -- =============================================
--- 1. Enable Row Level Security on the 'products' table
+-- Enable RLS for both tables
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.partners ENABLE ROW LEVEL SECURITY;
 
--- 2. Drop existing read policies if they exist, to prevent conflicts
+-- Drop old policies to prevent conflicts
 DROP POLICY IF EXISTS "Allow authenticated read access" ON public.products;
-DROP POLICY IF EXISTS "Allow individual read access" ON public.products; -- old policy name
+DROP POLICY IF EXISTS "Allow all access for authenticated users" ON public.partners;
 
--- 3. Create a new policy that allows any authenticated user to view all products.
---    For a production app, you might restrict this further (e.g., to users of a certain role).
-CREATE POLICY "Allow authenticated read access"
-ON public.products
-FOR SELECT
-TO authenticated
-USING (true);
+-- Create policies for 'products' table
+CREATE POLICY "Allow authenticated read access" ON public.products
+FOR SELECT TO authenticated USING (true);
+
+-- Create policies for 'partners' table (allow full CRUD for logged-in users)
+CREATE POLICY "Allow all access for authenticated users" ON public.partners
+FOR ALL TO authenticated USING (true);
 
 
 -- =============================================
--- SEED DATA (Sample Insurance Policies)
+-- SEED DATA (Sample Products and Partners)
 -- =============================================
--- This will insert data only if the table is empty.
--- You can safely re-run this script without creating duplicate data.
 DO $$
+DECLARE
+    motor_product_id uuid;
+    medical_product_id uuid;
+    marine_product_id uuid;
+    pet_product_id uuid;
 BEGIN
-   IF NOT EXISTS (SELECT 1 FROM public.products) THEN
-      INSERT INTO public.products (name, icon_url, status, underwriter, last_update, category, policy_code, description, key_features) VALUES
-      ('Comprehensive Motor Shield', 'https://i.imgur.com/g892g4S.png', 'Active', '{"name": "Alice Johnson", "email": "alice.j@example.com"}', '2024-05-20T10:00:00Z', 'Motor', 'MOT-001', 'All-in-one motor insurance covering accidents, theft, and third-party liability with roadside assistance.', '["24/7 Roadside Assistance", "Zero Depreciation Cover", "Theft Protection"]'),
-      ('Global Health Guard', 'https://i.imgur.com/f8u2L5g.png', 'Active', '{"name": "Bob Williams", "email": "bob.w@example.com"}', '2024-05-18T14:30:00Z', 'Medical', 'MED-001', 'Comprehensive international health coverage for individuals and families, including hospitalization and critical illness.', '["Worldwide Coverage", "Cashless Hospitalization", "Maternity Benefits"]'),
-      ('Marine Cargo Protect', 'https://i.imgur.com/k2tNc6b.png', 'Pilot', '{"name": "Charlie Brown", "email": "charlie.b@example.com"}', '2024-05-15T09:00:00Z', 'Marine', 'MAR-001', 'Specialized insurance for goods in transit over sea, protecting against loss or damage during shipment.', '["Port to Port Coverage", "War and Strike Risk Cover", "Container Protection"]'),
-      ('Happy Paws Pet Care', 'https://i.imgur.com/eB3fD3v.png', 'In Review', '{"name": "Diana Miller", "email": "diana.m@example.com"}', '2024-05-21T11:00:00Z', 'Pet', 'PET-001', 'Complete health insurance for pets, covering veterinary visits, surgeries, and routine check-ups.', '["Accident and Illness Cover", "Vaccination and Wellness", "Lost Pet Assistance"]'),
-      ('Legacy Travel Secure', 'https://i.imgur.com/zY9f3aN.png', 'Discontinued', '{"name": "Eve Davis", "email": "eve.d@example.com"}', '2023-12-01T18:00:00Z', 'Medical', 'MED-000', 'Older travel insurance product that has been replaced by the Global Health Guard policy.', '["Trip Cancellation", "Baggage Loss", "Emergency Medical"]');
-   END IF;
+   -- Clear existing data to prevent duplicates on re-run
+   TRUNCATE public.products, public.partners RESTART IDENTITY CASCADE;
+
+   -- Insert Products and get their IDs
+   INSERT INTO public.products (name, description, icon_url) VALUES
+   ('Motor', 'Products related to vehicle insurance and protection.', 'https://i.imgur.com/g892g4S.png'),
+   ('Medical', 'Health and wellness insurance products for individuals and groups.', 'https://i.imgur.com/f8u2L5g.png'),
+   ('Marine', 'Insurance coverage for maritime and shipping activities.', 'https://i.imgur.com/k2tNc6b.png'),
+   ('Pet', 'Insurance plans for the health and well-being of pets.', 'https://i.imgur.com/eB3fD3v.png')
+   RETURNING id INTO motor_product_id, medical_product_id, marine_product_id, pet_product_id;
+
+   -- Insert Partners associated with the Products
+   INSERT INTO public.partners (product_id, name, status, join_date, contact_person, description, logo_url) VALUES
+   -- Motor Partners
+   (motor_product_id, 'AutoGuard Solutions', 'Active', '2023-01-15T10:00:00Z', '{"name": "Alice Johnson", "email": "alice@autoguard.com"}', 'Leading provider of comprehensive auto insurance.', 'https://i.imgur.com/sC22L2A.png'),
+   (motor_product_id, 'Speedy Claims Inc.', 'Onboarding', '2024-05-01T11:00:00Z', '{"name": "Bob Williams", "email": "bob@speedyclaims.com"}', 'Specializes in fast and efficient claims processing for auto repairs.', 'https://i.imgur.com/NKyYJgL.png'),
+   (motor_product_id, 'Vintage Car Club', 'Inactive', '2022-03-20T09:00:00Z', '{"name": "Charlie Brown", "email": "charlie@vintagecc.com"}', 'A previous partner specializing in classic car insurance.', 'https://i.imgur.com/5lOVG0I.png'),
+   
+   -- Medical Partners
+   (medical_product_id, 'HealthFirst Network', 'Active', '2022-11-10T14:30:00Z', '{"name": "Diana Miller", "email": "diana@healthfirst.com"}', 'A network of hospitals providing cashless services.', 'https://i.imgur.com/2qK1Hgr.png'),
+   (medical_product_id, 'Wellness Corp', 'Active', '2023-08-22T16:00:00Z', '{"name": "Eve Davis", "email": "eve@wellnesscorp.com"}', 'Corporate wellness and group health insurance plans.', 'https://i.imgur.com/dJdf86b.png'),
+
+   -- Marine Partners
+   (marine_product_id, 'SeaLegs Assurance', 'Active', '2023-02-28T18:00:00Z', '{"name": "Frank Green", "email": "frank@sealegs.com"}', 'Specialists in marine cargo and hull insurance.', 'https://i.imgur.com/cEaXo2l.png'),
+
+   -- Pet Partners
+   (pet_product_id, 'Paws & Claws Vet', 'Onboarding', '2024-04-10T12:00:00Z', '{"name": "Grace Hill", "email": "grace@pawsclaws.com"}', 'A chain of veterinary clinics joining our network.', 'https://i.imgur.com/RklbQ7S.png'),
+   (pet_product_id, 'The Pet Emporium', 'Active', '2023-06-05T15:00:00Z', '{"name": "Heidi White", "email": "heidi@petemporium.com"}', 'Retail partner for pet wellness products and food.', 'https://i.imgur.com/7bqsJba.png');
 END $$;
 ```

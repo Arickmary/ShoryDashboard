@@ -1,9 +1,10 @@
+
 import React from 'react';
-import type { InsuranceProductStatus } from '../types';
+import type { PartnerStatus } from '../types';
 import { STATUS_COLORS, STATUS_DOT_COLORS } from '../constants';
 
 interface StatusBadgeProps {
-    status: InsuranceProductStatus;
+    status: PartnerStatus;
 }
 
 export function StatusBadge({ status }: StatusBadgeProps): React.ReactNode {
