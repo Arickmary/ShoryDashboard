@@ -32,6 +32,20 @@ const ErrorScreen: React.FC<{ message: string }> = ({ message }) => (
     </div>
 );
 
+// Helper function to map Supabase data to our application's product type
+const mapSupabaseToProduct = (p: any): InsuranceProduct => ({
+    id: p.id,
+    name: p.name,
+    iconUrl: p.icon_url,
+    status: p.status,
+    underwriter: p.underwriter,
+    lastUpdate: p.last_update,
+    category: p.category,
+    policyCode: p.policy_code,
+    description: p.description,
+    keyFeatures: p.key_features,
+});
+
 
 export default function App(): React.ReactNode {
     const [session, setSession] = useState<Session | null>(null);
@@ -85,18 +99,7 @@ export default function App(): React.ReactNode {
                 console.error('Error fetching products:', error);
                 setError(`Failed to fetch insurance policies. Check your database permissions (RLS) and network connection. (Reason: ${error.message})`);
             } else if (data) {
-                const mappedProducts: InsuranceProduct[] = data.map(p => ({
-                    id: p.id,
-                    name: p.name,
-                    iconUrl: p.icon_url,
-                    status: p.status,
-                    underwriter: p.underwriter,
-                    lastUpdate: p.last_update,
-                    category: p.category,
-                    policyCode: p.policy_code,
-                    description: p.description,
-                    keyFeatures: p.key_features,
-                }));
+                const mappedProducts: InsuranceProduct[] = data.map(mapSupabaseToProduct);
                 setProducts(mappedProducts);
             }
             setLoading(false);
@@ -152,18 +155,7 @@ export default function App(): React.ReactNode {
         }
 
         if (data) {
-            const newProduct: InsuranceProduct = {
-                 id: data.id,
-                 name: data.name,
-                 iconUrl: data.icon_url,
-                 status: data.status,
-                 underwriter: data.underwriter,
-                 lastUpdate: data.last_update,
-                 category: data.category,
-                 policyCode: data.policy_code,
-                 description: data.description,
-                 keyFeatures: data.key_features,
-            };
+            const newProduct = mapSupabaseToProduct(data);
             setProducts(prev => [newProduct, ...prev]);
             handleCloseFormModal();
         }
@@ -188,18 +180,7 @@ export default function App(): React.ReactNode {
         }
 
         if (data) {
-             const updatedProduct: InsuranceProduct = {
-                 id: data.id,
-                 name: data.name,
-                 iconUrl: data.icon_url,
-                 status: data.status,
-                 underwriter: data.underwriter,
-                 lastUpdate: data.last_update,
-                 category: data.category,
-                 policyCode: data.policy_code,
-                 description: data.description,
-                 keyFeatures: data.key_features,
-            };
+            const updatedProduct = mapSupabaseToProduct(data);
             setProducts(prev => prev.map(p => p.id === productId ? updatedProduct : p));
             handleCloseFormModal();
             // Also update the selected product if it's being viewed
