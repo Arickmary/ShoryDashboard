@@ -4,12 +4,14 @@ import type { InsuranceProduct } from '../types';
 let ai: GoogleGenAI | null = null;
 let geminiInitError: string | null = null;
 
-if (!process.env.API_KEY) {
-    geminiInitError = "Gemini API Key (API_KEY) is not set in environment variables.";
+const apiKey = window.APP_CONFIG?.API_KEY;
+
+if (!apiKey) {
+    geminiInitError = "Gemini API Key (API_KEY) is not set in config.js.";
     console.error(geminiInitError);
 } else {
     try {
-        ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        ai = new GoogleGenAI({ apiKey });
     } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
         geminiInitError = `Failed to initialize Gemini client: ${message}`;
