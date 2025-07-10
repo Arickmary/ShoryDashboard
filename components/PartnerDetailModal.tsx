@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import type { Partner } from '../types';
 import { StatusBadge } from './StatusBadge';
@@ -29,7 +28,7 @@ const AILoadingSkeleton: React.FC = () => (
     </div>
 );
 
-export function ProductDetailModal({ partner, onClose, onEdit }: PartnerDetailModalProps): React.ReactNode {
+export function PartnerDetailModal({ partner, onClose, onEdit }: PartnerDetailModalProps): React.ReactNode {
     const [aiSummary, setAiSummary] = useState<string>('');
     const [isLoadingSummary, setIsLoadingSummary] = useState<boolean>(false);
 

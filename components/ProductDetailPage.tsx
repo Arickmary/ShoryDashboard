@@ -1,11 +1,10 @@
-
 import React, { useState, useMemo } from 'react';
 import type { Product, Partner, PartnerStatus, NewPartner } from '../types';
 import { FilterControls } from './FilterControls';
-import { ProductList } from './ProductList';
+import { PartnerList } from './PartnerList';
 import { StatsSection } from './StatsSection';
-import { ProductDetailModal } from './ProductDetailModal';
-import { ProductFormModal } from './ProductFormModal';
+import { PartnerDetailModal } from './PartnerDetailModal';
+import { PartnerFormModal } from './PartnerFormModal';
 import { RecentUpdates } from './RecentUpdates';
 import { Icon } from './Icon';
 import { supabase } from '../services/supabaseClient';
@@ -134,11 +133,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product, a
                         onSearchTermChange={setSearchTerm}
                     />
                 </div>
-                <ProductList partners={filteredPartners} onSelectPartner={handleSelectPartner} />
+                <PartnerList partners={filteredPartners} onSelectPartner={handleSelectPartner} />
             </div>
 
             {selectedPartner && (
-                <ProductDetailModal 
+                <PartnerDetailModal 
                     partner={selectedPartner} 
                     onClose={handleCloseDetailModal}
                     onEdit={(partner) => {
@@ -148,7 +147,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product, a
                 />
             )}
             {isFormModalOpen && (
-                <ProductFormModal
+                <PartnerFormModal
                     partnerToEdit={partnerToEdit}
                     onClose={handleCloseFormModal}
                     onAddPartner={handleAddPartner}

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { Partner } from '../types';
 import { StatusBadge } from './StatusBadge';
@@ -9,7 +8,7 @@ interface PartnerCardProps {
     onSelectPartner: (partner: Partner) => void;
 }
 
-export function ProductCard({ partner, onSelectPartner }: PartnerCardProps): React.ReactNode {
+export function PartnerCard({ partner, onSelectPartner }: PartnerCardProps): React.ReactNode {
     
     const timeAgo = (date: string): string => {
         const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);

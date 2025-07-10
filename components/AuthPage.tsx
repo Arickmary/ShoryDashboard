@@ -40,7 +40,7 @@ export const AuthPage: React.FC = () => {
                 <div className="bg-sky-500 p-3 rounded-lg">
                     <Icon name="zap" className="w-8 h-8 text-white" />
                 </div>
-                <h1 className="text-4xl font-bold text-slate-800">Insurance Hub</h1>
+                <h1 className="text-4xl font-bold text-slate-800">Product Hub</h1>
             </div>
 
             <div className="w-full max-w-sm bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
